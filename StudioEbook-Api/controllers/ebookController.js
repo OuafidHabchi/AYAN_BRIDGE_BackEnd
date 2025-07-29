@@ -34,8 +34,7 @@ export const uploadFile = async (req, res) => {
 
     // ✅ Si Word
     else if (
-      file.mimetype ===
-      "application/vnd.openxmlformats-officedocument.wordprocessingml.document" ||
+      file.mimetype === "application/vnd.openxmlformats-officedocument.wordprocessingml.document" ||
       file.mimetype === "application/msword"
     ) {
       const result = await mammoth.extractRawText({ buffer: file.buffer });
@@ -44,6 +43,15 @@ export const uploadFile = async (req, res) => {
 
     else {
       return res.status(400).json({ success: false, message: "Format de fichier non supporté" });
+    }
+
+    // ✅ Correction pour le texte arabe (RTL)
+    const arabicRegex = /[\u0600-\u06FF]/;
+    if (arabicRegex.test(text)) {
+      text = text
+        .split('\n')                          // ligne par ligne
+        .map(line => line.split('').reverse().join('')) // inverser chaque ligne
+        .join('\n');
     }
 
     return res.status(200).json({ success: true, text });
